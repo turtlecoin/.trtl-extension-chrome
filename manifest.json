@@ -3,7 +3,7 @@
   "name": ".trtl DNS",
   "short_name": "TRTL-DNS",
   "version": "1.0.0",
-  "description": "Resolves domains from .trtl name systems as well as all other OpenNIC & ICANN domains",
+  "description": "Resolves domains from .trtl name systems as well as all other OpenNIC & other blockchain domain names",
   "icons": {
     "16": "icon-16.png",
     "24": "icon-24.png",
