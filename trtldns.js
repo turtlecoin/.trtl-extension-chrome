@@ -83,7 +83,9 @@ var pac = {
 
     cache.each(function (domain) {
       var ips = cache.ips(domain);
-      if (ips.length) { obj[domain] = ips; }
+      if (ips.length) {
+        obj[domain] = ips;
+      }
     });
 
     return JSON.stringify(obj);
@@ -97,7 +99,7 @@ var pac = {
     }
 
     var script = pac._scriptStub.toString()
-      .replace(/^.*|.*$/g, '')    // wrapping 'function () { ... }'.
+      .replace(/^.*|.*$/g, '') // wrapping 'function () { ... }'.
       .replace('CACHE_HERE', pac.buildObject());
 
     //console.log(script);
@@ -109,21 +111,23 @@ var pac = {
       },
     };
 
-    chrome.proxy.settings.set({value: config}, function () {
-      console.log('BDNS: set new PAC script, length = ' + script.length); //-
+    chrome.proxy.settings.set({
+      value: config
+    }, function () {
+      console.log('TRTL-DNS: set new PAC script, length = ' + script.length); //-
     });
   },
 
   // No need to update PAC on domains missing (deleted) from cache since they
   // will be reprocessed by onBeforeRequest before PAC is queried.
-  onDomainDelete: function (domain) { },
+  onDomainDelete: function (domain) {},
 }
 
 cache.onIpChange = pac.onIpChange;
 cache.onDomainDelete = pac.onDomainDelete;
 
 chrome.webRequest.onBeforeRequest.addListener(function (details) {
-  //console.dir(details);
+  console.dir(details);
 
   var url = parseURL(details.url);
 
@@ -131,7 +135,7 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
     var ips = cache.ips(url.domain);
 
     if (ips) {
-      console.log('BDNS: #' + details.requestId + ' (' + url.domain + '): already resolved to ' + ips + '; cache size = ' + cache.length); //-
+      console.log('TRTL-DNS: #' + details.requestId + ' (' + url.domain + '): already resolved to ' + ips + '; cache size = ' + cache.length); //-
 
       // No need to update visited domains' times like in Firefox because
       // even if newly resolved IPs change from the ones user used to visit the
@@ -139,18 +143,22 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
       // to a new working IP, etc.).
       if (!ips.length) {
         showThrottledNotification(url.domain, 'Non-existent .' + url.tld + ' domain: ' + url.domain);
-        return {cancel: true};
+        return {
+          cancel: true
+        };
       }
     } else {
-      console.log('BDNS: #' + details.requestId + ' (' + url.domain + '): resolving, full URL: ' + url.url); //-
+      console.log('TRTL-DNS: #' + details.requestId + ' (' + url.domain + '): resolving, full URL: ' + url.url); //-
 
-      var res = {cancel: true};
+      var res = {
+        cancel: true
+      };
 
       resolveViaAPI(url.domain, false, function (ips) {
         // On error or {cancel}, Chrome fires 1-2 more same requests which cause
         // repeated notifications.
         if (!ips) {
-          showThrottledNotification(url.domain, 'Resolution of .' + url.tld + ' is temporary unavailable');
+          showThrottledNotification(url.domain, 'Resolution of .' + url.tld + ' is temporarily unavailable');
           rotateApiHost();
         } else if (!ips.length) {
           cache.set(url.domain, []);
@@ -161,7 +169,7 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
         }
       });
 
-      console.log('BDNS: #' + details.requestId + ' (' + url.domain + '): resolution finished, returning ' + res); //-
+      console.log('TRTL-DNS: #' + details.requestId + ' (' + url.domain + '): resolution finished, returning ' + res); //-
 
       return res;
     }
@@ -173,24 +181,26 @@ chrome.webRequest.onErrorOccurred.addListener(function (details) {
 
   var req = details.requestId;
   var url = parseURL(details.url);
-  console.log('BDNS: #' + req + ' (' + url.domain + '): ' + details.error); //-
+  console.log('TRTL-DNS: #' + req + ' (' + url.domain + '): ' + details.error); //-
 
   switch (details.error) {
-  // Proxy error. Fired once, only if all IPs from the list of domain's IPs are down.
-  case 'net::ERR_PROXY_CONNECTION_FAILED':
-    if (cache.has(url.domain)) {
-      showThrottledNotification(url.domain, url.domain + ' is down');
-    }
+    // Proxy error. Fired once, only if all IPs from the list of domain's IPs are down.
+    case 'net::ERR_PROXY_CONNECTION_FAILED':
+      if (cache.has(url.domain)) {
+        showThrottledNotification(url.domain, url.domain + ' is down');
+      }
 
-    break;
+      break;
   }
 }, allURLs);
 
-chrome.alarms.create({periodInMinutes: 1});
+chrome.alarms.create({
+  periodInMinutes: 1
+});
 
 chrome.alarms.onAlarm.addListener(function () {
   var count = cache.prune();
-  console.log('BDNS: deleted ' + count + ' expired entries; cache size = ' + cache.length); //-
+  console.log('TRTL-DNS: deleted ' + count + ' expired entries; cache size = ' + cache.length); //-
 });
 
 var tabSupport = {};
@@ -198,7 +208,7 @@ var activeTab;
 
 chrome.tabs.onActivated.addListener(function (info) {
   activeTab = info.tabId;
-  console.info('BDNS: tab #' + activeTab + ' now active'); //-
+  console.info('TRTL-DNS: tab #' + activeTab + ' now active'); //-
 
   var supported = tabSupport[activeTab];
   chrome.browserAction[!supported ? 'enable' : 'disable']();
@@ -210,7 +220,7 @@ chrome.tabs.onUpdated.addListener(function (id, changeInfo) {
   if (url) {
     var supported = isSupportedTLD(url.tld);
 
-    console.info('BDNS: tab #' + id + ' updated to ' + (supported ? '' : 'un') + 'supported TLD, domain: ' + url.domain); //-
+    console.info('TRTL-DNS: tab #' + id + ' updated to ' + (supported ? '' : 'un') + 'supported TLD, domain: ' + url.domain); //-
 
     if (supported) {
       tabSupport[id] = supported;
@@ -226,6 +236,6 @@ chrome.tabs.onUpdated.addListener(function (id, changeInfo) {
 
 chrome.browserAction.onClicked.addListener(function () {
   chrome.tabs.create({
-    url: "https://blockchain-dns.info"
+    url: "https://trtlnic.com"
   });
 });

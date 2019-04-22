@@ -11,8 +11,8 @@ var cache = {
 
   maxLength: 1000,
 
-  onIpChange: function (domain, ips, existed) { },
-  onDomainDelete: function (domain) { },
+  onIpChange: function (domain, ips, existed) {},
+  onDomainDelete: function (domain) {},
 
   has: function (domain) {
     return domain in cache._items;
@@ -31,8 +31,8 @@ var cache = {
 
   // Empty ips means the domain was resolved as NX.
   set: function (domain, ips) {
-    if (toString.call(domain) != '[object String]' || !domain.match(/^[\w\-.]+$/)
-        || !Array.isArray(ips)) {
+    if (toString.call(domain) != '[object String]' || !domain.match(/^[\w\-.]+$/) ||
+      !Array.isArray(ips)) {
       throw 'BDNS: cache.set(): bad argument(s)';
     }
 
@@ -48,7 +48,9 @@ var cache = {
     cache.onIpChange(domain, ips, existed);
 
     cache.each(function (domain) {
-      if (cache._length <= cache.maxLength) { return true; }
+      if (cache._length <= cache.maxLength) {
+        return true;
+      }
       cache.delete(domain);
     });
   },
