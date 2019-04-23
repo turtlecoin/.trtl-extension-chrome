@@ -16,6 +16,10 @@ For the list of OpenNIC support domain names see the [full list](https://wiki.op
 
 --------
 
+## Installing Production Version
+
+Download from the Chrome Web Store: [.trtl DNS](https://chrome.google.com/webstore/detail/trtl-dns/bmnaipkfomokpndoimalmbfoebbiapch?hl=en-US)
+
 ## Installing Debug Version
 
 You can permanently load a debug (unsigned) extension into Chrome, i.e. it will survive restart.
